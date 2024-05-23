@@ -3,19 +3,88 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  user
+  manager
+  admin
+  superAdmin
+  customer
+  stockManager
+  deliveryMan
+  accountant
+  salesManager
+  salesMan
+  salesExecutive
+  salesCoordinator
+  salesDirector
+  salesAssistant
+}
+
+model Users {
+  id        String     @id @default(cuid()) @map("id")
+  email     String     @unique
+  password  String
+  name      String
+  role      UserRole   @default(customer)
+  Books     Books[]
+  address   Addresses? @relation(fields: [addressId], references: [id])
+  addressId String?    @map("address_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+}
+
+model Publishers {
+  id        String     @id @default(cuid()) @map("id")
+  name      String
+  address   Addresses? @relation(fields: [addressId], references: [id])
+  addressId String?    @map("address_id")
+  Books     Books[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+}
+
+model Addresses {
+  id        String       @id @default(cuid()) @map("id")
+  address   String
+  city      String
+  state     String
+  country   String
+  zip       Int
+  Publisher Publishers[]
+  Author    Authors[]
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  Users     Users[]
+}
+
+model Authors {
+  id        String     @id @default(cuid()) @map("id")
+  name      String
+  image     String?
+  address   Addresses? @relation(fields: [addressId], references: [id])
+  addressId String?    @map("address_id")
+  Books     Books[]
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+}
+
 model Books {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
+  id          String     @id @default(cuid()) @map("id")
+  title       String
   author      String
-  description String?
-  images      String[]
+  description String
+  images      Json
   price       Float
-  publisher   String?
-  user        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  publisher   Publishers @relation(fields: [publisherId], references: [id])
+  publisherId String     @map("publisher_id")
+  user        Users      @relation(fields: [userId], references: [id])
+  userId      String     @map("user_id")
+  Author      Authors    @relation(fields: [authorId], references: [id])
+  authorId    String     @map("author_id")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
